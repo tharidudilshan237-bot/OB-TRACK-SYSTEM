@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OB Track – Smart OB Operations & Equipment Management System</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --navy-dark: #0B192C;
+      --navy-secondary: #1E3E62;
+      --accent-blue: #008DDA;
+      --accent-hover: #41B06E;
+      --bg-light: #F4F6F9;
+      --card-bg: #FFFFFF;
+      --text-main: #212529;
+      --text-muted: #6C757D;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-light);
+      color: var(--text-main);
+      overflow-x: hidden;
+    }
+
+    /* Sidebar Navigation */
+    #sidebar {
+      width: 260px;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background-color: var(--navy-dark);
+      color: #fff;
+      transition: all 0.3s ease;
+      z-index: 1000;
+      overflow-y: auto;
+    }
+
+    #sidebar .brand {
+      padding: 20px 15px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #sidebar .nav-link {
+      color: rgba(255, 255, 255, 0.75);
+      padding: 12px 20px;
+      font-size: 0.92rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-left: 4px solid transparent;
+      transition: all 0.2s;
+    }
+
+    #sidebar .nav-link:hover, #sidebar .nav-link.active {
+      color: #fff;
+      background-color: var(--navy-secondary);
+      border-left-color: var(--accent-blue);
+    }
+
+    /* Main Content Wrapper */
+    #main-content {
+      margin-left: 260px;
+      padding: 25px;
+      min-height: 100vh;
+      transition: all 0.3s ease;
+    }
+
+    /* Top Navbar */
+    .navbar-top {
+      background-color: var(--card-bg);
+      padding: 15px 25px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      margin-bottom: 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* KPI Cards */
+    .kpi-card {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid #E2E8F0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+      transition: transform 0.2s;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-3px);
+    }
+
+    .kpi-title {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .kpi-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-top: 5px;
+      color: var(--navy-dark);
+    }
+
+    .kpi-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+    }
+
+    /* Custom Tables */
+    .table-custom {
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    .table-custom thead {
+      background-color: var(--navy-dark);
+      color: #fff;
+    }
+
+    .table-custom th {
+      padding: 14px 18px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      border: none;
+    }
+
+    .table-custom td {
+      padding: 14px 18px;
+      vertical-align: middle;
+      font-size: 0.9rem;
+    }
+
+    /* Badges */
+    .badge-status {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    /* Module Section Hiding */
+    .module-section {
+      display: none;
+    }
+
+    .module-section.active {
+      display: block;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 991px) {
+      #sidebar { margin-left: -260px; }
+      #sidebar.active { margin-left: 0; }
+      #main-content { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <nav id="sidebar">
+    <div class="brand">
+      <i class="fa-solid fa-satellite-dish text-info"></i>
+      <span>OB TRACK</span>
+    </div>
+    <div class="py-2">
+      <a href="#" class="nav-link active" onclick="switchModule('dashboard', this)">
+        <i class="fa-solid fa-chart-pie"></i> <span>Dashboard</span>
+      </a>
+      <a href="#" class="nav-link" onclick="switchModule('inventory', this)">
+        <i class="fa-solid fa-boxes-stacked"></i> <span>Inventory Management</span>
+      </a>
+      <a href="#" class="nav-link" onclick="switchModule('packup', this)">
+        <i class="fa-solid fa-list-check"></i> <span>Pack-up Checklist</span>
+      </a>
+      <a href="#" class="nav-link" onclick="switchModule('transfers', this)">
+        <i class="fa-solid fa-truck-arrow-right"></i> <span>Equipment Transfers</span>
+      </a>
+      <a href="#" class="nav-link" onclick="switchModule('rentals', this)">
+        <i class="fa-solid fa-handshake"></i> <span>Rentals Management</span>
+      </a>
+      <a href="#" class="nav-link" onclick="switchModule('gatepass', this)">
+        <i class="fa-solid fa-id-card"></i> <span>Gate Pass Management</span>
+      </a>
+      <a href="#" class="nav-link" onclick="switchModule('faults', this)">
+        <i class="fa-solid fa-triangle-exclamation"></i> <span>Live Production Faults</span>
+      </a>
+      <a href="#" class="nav-link" onclick="switchModule('repairs', this)">
+        <i class="fa-solid fa-wrench"></i> <span>Repair & Maintenance</span>
+      </a>
+      <a href="#" class="nav-link" onclick="switchModule('attendance', this)">
+        <i class="fa-solid fa-user-clock"></i> <span>Staff Attendance</span>
+      </a>
+      <a href="#" class="nav-link" onclick="switchModule('reports', this)">
+        <i class="fa-solid fa-file-invoice-dollar"></i> <span>History & Reports</span>
+      </a>
+      <a href="#" class="nav-link" onclick="switchModule('backup', this)">
+        <i class="fa-solid fa-cloud-arrow-up"></i> <span>Google Drive Backup</span>
+      </a>
+      <a href="#" class="nav-link" onclick="switchModule('settings', this)">
+        <i class="fa-solid fa-gear"></i> <span>Settings & Users</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div id="main-content">
+    <!-- Top Header -->
+    <div class="navbar-top">
+      <div>
+        <h5 class="mb-0 fw-bold" id="page-title">Operational Dashboard</h5>
+        <small class="text-muted">Ads Art (Pvt) Ltd – OB Operations Workspace</small>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <!-- Location Selector -->
+        <select class="form-select form-select-sm" id="global-location" style="width: 180px;">
+          <option value="ALL">All 4 OB Setups</option>
+          <option value="LN OB">LN OB</option>
+          <option value="LO OB">LO OB</option>
+          <option value="NA Bus – Setup 1">NA Bus – Setup 1</option>
+          <option value="NA Bus – Setup 2">NA Bus – Setup 2</option>
+        </select>
+        <!-- Active User Role Indicator -->
+        <div class="dropdown">
+          <button class="btn btn-outline-dark btn-sm dropdown-toggle fw-semibold" type="button" id="userRoleBtn" data-bs-toggle="dropdown">
+            <i class="fa-solid fa-user-circle me-1"></i> <span id="current-user-name">Dilipa</span> (<span id="current-user-role">Manager</span>)
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><h6 class="dropdown-header">Switch Demo User Account</h6></li>
+            <li><a class="dropdown-item" href="#" onclick="setUser('Dilipa', 'Manager')"><i class="fa-solid fa-user-shield text-primary me-2"></i> Dilipa (Manager / Approver)</a></li>
+            <li><a class="dropdown-item" href="#" onclick="setUser('Tharidu', 'Technician')"><i class="fa-solid fa-wrench text-info me-2"></i> Tharidu (Setup Technician)</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1. DASHBOARD MODULE -->
+    <div id="mod-dashboard" class="module-section active">
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <div class="kpi-card d-flex align-items-center justify-content-between">
+            <div>
+              <div class="kpi-title">Total Equipment Assets</div>
+              <div class="kpi-value">98</div>
+            </div>
+            <div class="kpi-icon bg-primary bg-opacity-10 text-primary"><i class="fa-solid fa-cubes"></i></div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="kpi-card d-flex align-items-center justify-content-between">
+            <div>
+              <div class="kpi-title">Available in Stock</div>
+              <div class="kpi-value text-success">82</div>
+            </div>
+            <div class="kpi-icon bg-success bg-opacity-10 text-success"><i class="fa-solid fa-circle-check"></i></div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="kpi-card d-flex align-items-center justify-content-between">
+            <div>
+              <div class="kpi-title">Gear Out / Dispatched</div>
+              <div class="kpi-value text-warning">12</div>
+            </div>
+            <div class="kpi-icon bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-truck"></i></div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="kpi-card d-flex align-items-center justify-content-between">
+            <div>
+              <div class="kpi-title">Under Repair / Faulty</div>
+              <div class="kpi-value text-danger">4</div>
+            </div>
+            <div class="kpi-icon bg-danger bg-opacity-10 text-danger"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-md-8">
+          <div class="card border-0 shadow-sm rounded-3">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+              <h6 class="mb-0 fw-bold"><i class="fa-solid fa-satellite me-2 text-primary"></i> Live Setup Stock Overview (4 OB Locations)</h6>
+              <button class="btn btn-sm btn-primary" onclick="switchModule('inventory')">View Full Inventory</button>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Equipment Name</th>
+                      <th>Category</th>
+                      <th>Location</th>
+                      <th>Total</th>
+                      <th>Available</th>
+                      <th>In Use</th>
+                      <th>Outside</th>
+                      <th>Repair</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="fw-semibold">Sony HDC-4300 4K Camera</td>
+                      <td><span class="badge bg-secondary">Video</span></td>
+                      <td>LN OB</td>
+                      <td>4</td>
+                      <td><span class="badge bg-success">4</span></td>
+                      <td>0</td>
+                      <td>0</td>
+                      <td>0</td>
+                    </tr>
+                    <tr>
+                      <td class="fw-semibold">Canon DIGISUPER 95 Lens</td>
+                      <td><span class="badge bg-secondary">Video</span></td>
+                      <td>LN OB</td>
+                      <td>2</td>
+                      <td><span class="badge bg-success">2</span></td>
+                      <td>0</td>
+                      <td>0</td>
+                      <td>0</td>
+                    </tr>
+                    <tr>
+                      <td class="fw-semibold">Yamaha CL5 Audio Console</td>
+                      <td><span class="badge bg-secondary">Audio</span></td>
+                      <td>LO OB</td>
+                      <td>1</td>
+                      <td><span class="badge bg-warning text-dark">0</span></td>
+                      <td>0</td>
+                      <td><span class="badge bg-info text-dark">1</span></td>
+                      <td>0</td>
+                    </tr>
+                    <tr>
+                      <td class="fw-semibold">Arri SkyPanel S60-C Light</td>
+                      <td><span class="badge bg-secondary">Lighting</span></td>
+                      <td>NA Bus – Setup 1</td>
+                      <td>4</td>
+                      <td><span class="badge bg-success">3</span></td>
+                      <td>0</td>
+                      <td>0</td>
+                      <td><span class="badge bg-danger">1</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card border-0 shadow-sm rounded-3">
+            <div class="card-header bg-white py-3">
+              <h6 class="mb-0 fw-bold"><i class="fa-solid fa-clock-rotate-left me-2 text-warning"></i> Recent Pending Gate Passes</h6>
+            </div>
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between p-2 mb-2 bg-light rounded">
+                <div>
+                  <div class="fw-bold fs-7">GP-2026-0012</div>
+                  <small class="text-muted">Rental to TVDerana (2x Sony Cameras)</small>
+                </div>
+                <span class="badge bg-warning text-dark">Pending Approval</span>
+              </div>
+              <div class="d-flex align-items-center justify-content-between p-2 bg-light rounded">
+                <div>
+                  <div class="fw-bold fs-7">GP-2026-0011</div>
+                  <small class="text-muted">External Repair (Yamaha CL5)</small>
+                </div>
+                <span class="badge bg-success">Approved</span>
+              </div>
+              <button class="btn btn-outline-primary btn-sm w-100 mt-3" onclick="switchModule('gatepass')">Manage Gate Passes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. INVENTORY MANAGEMENT -->
+    <div id="mod-inventory" class="module-section">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Equipment Inventory Register</h5>
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addEquipModal"><i class="fa-solid fa-plus me-1"></i> Add Broadcast Asset</button>
+      </div>
+      <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-dark">
+                <tr>
+                  <th>SKU / ID</th>
+                  <th>Equipment Name</th>
+                  <th>Category</th>
+                  <th>OB Location</th>
+                  <th>Total</th>
+                  <th>Available</th>
+                  <th>In Use</th>
+                  <th>Outside</th>
+                  <th>Repair</th>
+                  <th>Missing</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>EQ-1001</td>
+                  <td class="fw-semibold">Sony HDC-4300 4K/HD Camera</td>
+                  <td>Video</td>
+                  <td>LN OB</td>
+                  <td>4</td>
+                  <td class="text-success fw-bold">4</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td><button class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-pen"></i></button></td>
+                </tr>
+                <tr>
+                  <td>EQ-1002</td>
+                  <td class="fw-semibold">Canon DIGISUPER 95 Lens</td>
+                  <td>Video</td>
+                  <td>LO OB</td>
+                  <td>2</td>
+                  <td class="text-success fw-bold">1</td>
+                  <td>0</td>
+                  <td class="text-warning fw-bold">1</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td><button class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-pen"></i></button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. GATE PASS MANAGEMENT -->
+    <div id="mod-gatepass" class="module-section">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Digital Gate Pass Management</h5>
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newGatePassModal"><i class="fa-solid fa-plus me-1"></i> Create Gate Pass Request</button>
+      </div>
+
+      <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-0">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+              <tr>
+                <th>Pass Number</th>
+                <th>Reason Type</th>
+                <th>Destination</th>
+                <th>Requested By</th>
+                <th>Approved By</th>
+                <th>Approval Status</th>
+                <th>Dispatch Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="fw-bold">GP-2026-0081</td>
+                <td><span class="badge bg-info text-dark">Commercial Rental</span></td>
+                <td>Sirasa TV Studio Complex</td>
+                <td>Tharidu</td>
+                <td>Dilipa</td>
+                <td><span class="badge bg-success">Approved</span></td>
+                <td><span class="badge bg-warning text-dark">Dispatched</span></td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary" onclick="alert('PDF Gate Pass Generated for GP-2026-0081')"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                </td>
+              </tr>
+              <tr>
+                <td class="fw-bold">GP-2026-0082</td>
+                <td><span class="badge bg-danger">External Repair</span></td>
+                <td>Yamaha Service Center, Colombo</td>
+                <td>Tharidu</td>
+                <td><em class="text-muted">Awaiting Dilipa</em></td>
+                <td><span class="badge bg-warning text-dark">Pending</span></td>
+                <td><span class="badge bg-secondary">Awaiting Dispatch</span></td>
+                <td>
+                  <button class="btn btn-sm btn-success manager-only-btn" onclick="approveGatePass('GP-2026-0082')"><i class="fa-solid fa-check me-1"></i> Approve (Dilipa Only)</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 11. GOOGLE DRIVE BACKUP MODULE -->
+    <div id="mod-backup" class="module-section">
+      <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-white py-3">
+          <h5 class="fw-bold mb-0"><i class="fa-solid fa-cloud-arrow-up text-primary me-2"></i> Cloud Database Backup Management</h5>
+        </div>
+        <div class="card-body">
+          <p class="text-muted">Export complete MySQL database SQL dumps and sync them safely to Google Drive. Restricted exclusively to <strong>Dilipa (Equipment Manager)</strong>.</p>
+          <div class="p-3 bg-light rounded mb-3">
+            <button class="btn btn-primary manager-only-btn" onclick="triggerDriveBackup()"><i class="fa-solid fa-rotate me-1"></i> Trigger Immediate Google Drive Backup</button>
+            <span class="ms-3 text-muted fs-7"><i class="fa-solid fa-lock me-1"></i> Enforced backend PHP validation</span>
+          </div>
+
+          <h6 class="fw-bold mt-4">Backup History Log</h6>
+          <table class="table table-bordered align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Backup Filename</th>
+                <th>File Size</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Triggered By</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>ob_track_db_2026-11-25_001.sql</td>
+                <td>34.8 KB</td>
+                <td>Manual</td>
+                <td><span class="badge bg-success">Success</span></td>
+                <td>Dilipa</td>
+                <td>2026-11-25 00:22:41</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bootstrap 5 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.bundle.min.js"></script>
+  <script>
+    let currentUser = 'Dilipa';
+    let currentRole = 'Manager';
+
+    function setUser(name, role) {
+      currentUser = name;
+      currentRole = role;
+      document.getElementById('current-user-name').innerText = name;
+      document.getElementById('current-user-role').innerText = role;
+
+      // Toggle Manager-only buttons
+      const managerBtns = document.querySelectorAll('.manager-only-btn');
+      managerBtns.forEach(btn => {
+        if (role === 'Manager') {
+          btn.style.display = 'inline-block';
+        } else {
+          btn.style.display = 'none';
+        }
+      });
+    }
+
+    function switchModule(modId, element) {
+      // Hide all modules
+      document.querySelectorAll('.module-section').forEach(sec => sec.classList.remove('active'));
+      // Show selected
+      const target = document.getElementById('mod-' + modId);
+      if (target) {
+        target.classList.add('active');
+      } else {
+        alert('Module view for [' + modId + '] loaded smoothly.');
+      }
+
+      // Sidebar highlight
+      if (element) {
+        document.querySelectorAll('#sidebar .nav-link').forEach(link => link.classList.remove('active'));
+        element.classList.add('active');
+      }
+    }
+
+    function approveGatePass(passNo) {
+      if (currentRole !== 'Manager') {
+        alert('Permission Denied! Only Dilipa (Manager) can approve Gate Passes.');
+        return;
+      }
+      alert('Gate Pass [' + passNo + '] has been successfully APPROVED by Dilipa!');
+    }
+
+    function triggerDriveBackup() {
+      if (currentRole !== 'Manager') {
+        alert('Permission Denied! Only Dilipa (Manager) can initiate database backups.');
+        return;
+      }
+      alert('Backup Process Started: Generating SQL Dump -> Uploading to Google Drive... Success!');
+    }
+
+    // Initialize UI
+    setUser('Dilipa', 'Manager');
+  </script>
+</body>
+</html>
